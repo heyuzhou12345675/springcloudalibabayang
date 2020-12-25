@@ -1,0 +1,65 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: cloud-service-gateway
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+  main:
+    #当遇到相同名字时是否允许覆盖注册
+    allow-bean-definition-overriding: true
+  cloud:
+    #使用nacos作为服务注册发现
+    nacos:
+      discovery:
+        server-addr: 192.168.2.82:8848
+    #使用sentinel作为熔断器
+    sentinel:
+      transport:
+        port: 8721
+        dashboard: 192.168.2.82:8080
+    #设置与服务注册发现组件结合，这样可以采用服务名路由策略
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      #配置路由规则
+      routes:
+          #采用自定义路由ID (有固定用法，不同的id有不同的功能)
+        - id: NACOS-SERVICE-CONSUMER
+          #采用 LoadBalanceClient方式请求，以lb://开头，后面接注册在nacos上的服务名
+          uri: lb://nacos-service-consumer
+          #Predicate 翻译过来是谓词，主要是匹配用户的请求
+          predicates:
+            # 路径匹配，以 api 开头，直接配置是不生效的，看 filters 配置
+            - Path=/api/**
+          filters:
+            # 前缀过滤，默认配置下，我们的请求路径是 http://localhost:9000/myshop-service-consumer-item/** 这时会路由到指定的服务
+            # 此处配置去掉 1 个路径前缀，再配置上面的 Path=/api/**，就能按照 http://localhost:9000/api/** 的方式访问了
+            - StripPrefix=1
+#        - id: MYSHOP-SERVICE-REG
+#          uri: lb://myshop-service-reg
+#          predicates:
+#            - Path=/api/reg/**
+#          filters:
+#            - StripPrefix=1
+
+
+
+#激活Sentinel对Feign的支持
+feign:
+  sentinel:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    org.springframework.cloud.gateway: debug

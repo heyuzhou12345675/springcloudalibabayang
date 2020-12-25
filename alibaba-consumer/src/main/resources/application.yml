@@ -1,0 +1,29 @@
+server:
+  port: 8484
+
+spring:
+  application:
+    name: nacos-service-consumer
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+    sentinel:
+      transport:
+        dashboard: localhost:8080
+        port: 8719
+  profiles:
+    active: test
+
+#消费者将去访问的微服务名称
+server-url:
+  nacos-user-service: http://alibaba-service-provider
+
+#激活Sentinel对Feign的支持
+feign:
+  sentinel:
+    enabled: true
+
+mybatis:
+  #指定mapper文件扫描位置
+  mapper-locations: classpath:mapper/*Mapper.xml
